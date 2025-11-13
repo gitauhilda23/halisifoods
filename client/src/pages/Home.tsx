@@ -6,6 +6,8 @@ import CategoryCard from "@/components/CategoryCard";
 import TestimonialCard from "@/components/TestimonialCard";
 import BlogCard from "@/components/BlogCard";
 import NewsletterSection from "@/components/NewsletterSection";
+
+
 import breakfastCover from "@assets/generated_images/Breakfast_recipes_eBook_cover_9d71df24.png";
 import mainDishCover from "@assets/generated_images/Main_dishes_eBook_cover_27176a57.png";
 import vegetarianCover from "@assets/generated_images/Vegetarian_recipes_eBook_cover_bb33c52b.png";
@@ -87,7 +89,7 @@ export default function Home() {
     {
       id: "1",
       title: "The Art of Perfect Nyama Choma",
-      excerpt: "Learn the traditional techniques for grilling the perfect nyama choma, from selecting the right cuts to achieving that smoky flavor that makes this dish legendary.",
+      excerpt: "Learn the traditional techniques for grilling the perfect nyama choma...",
       image: blogImage,
       date: "Nov 1, 2025",
       author: "Chef Wanjiku",
@@ -95,7 +97,7 @@ export default function Home() {
     {
       id: "2",
       title: "Essential Kenyan Spices Guide",
-      excerpt: "Discover the aromatic world of Kenyan spices and learn how to use them to create authentic flavors in your cooking.",
+      excerpt: "Discover the aromatic world of Kenyan spices...",
       image: blogImage,
       date: "Oct 28, 2025",
       author: "Maria Njeri",
@@ -103,7 +105,7 @@ export default function Home() {
     {
       id: "3",
       title: "Making Ugali: A Step-by-Step Guide",
-      excerpt: "Master the technique of making perfect ugali every time with this comprehensive guide to Kenya's beloved staple food.",
+      excerpt: "Master the technique of making perfect ugali every time...",
       image: blogImage,
       date: "Oct 25, 2025",
       author: "Chef Wanjiku",
@@ -113,10 +115,13 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header cartItemCount={0} />
-      
+     
       <main className="flex-1">
         <HeroSection />
 
+        
+
+        {/* Featured Products */}
         <section className="py-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
@@ -135,6 +140,7 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Categories */}
         <section className="py-16 px-4 sm:px-6 lg:px-8 bg-muted">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
@@ -155,6 +161,7 @@ export default function Home() {
 
         <NewsletterSection />
 
+        {/* Testimonials */}
         <section className="py-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
@@ -173,6 +180,7 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Blog */}
         <section className="py-16 px-4 sm:px-6 lg:px-8 bg-muted">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
@@ -191,7 +199,6 @@ export default function Home() {
           </div>
         </section>
       </main>
-
       <Footer />
     </div>
   );

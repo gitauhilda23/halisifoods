@@ -18,7 +18,7 @@ export const ebooks = pgTable("ebooks", {
   category: text("category").notNull(),
   recipeCount: integer("recipe_count").notNull(),
   imageUrl: text("image_url").notNull(),
-  fileUrl: text("file_url"),
+  fileUrl: text("file_url"), // ← ALREADY EXISTS — PERFECT
   ingredients: text("ingredients").array().notNull().default(sql`ARRAY[]::text[]`),
   featured: boolean("featured").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -35,6 +35,7 @@ export const orders = pgTable("orders", {
   paymentStatus: text("payment_status").notNull().default("pending"),
   stripePaymentIntentId: text("stripe_payment_intent_id"),
   paypalOrderId: text("paypal_order_id"),
+  paystackReference: text("paystack_reference"), // ← ADDED FOR PAYSTACK
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -71,6 +72,8 @@ export const insertOrderSchema = createInsertSchema(orders).omit({
   id: true,
   createdAt: true,
   paymentStatus: true,
+}).extend({
+  paystackReference: z.string().optional(), // ← ALLOW PAYSTACK REF
 });
 
 export const insertNewsletterSchema = createInsertSchema(newsletters).omit({
@@ -86,15 +89,11 @@ export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
-
 export type InsertEbook = z.infer<typeof insertEbookSchema>;
 export type Ebook = typeof ebooks.$inferSelect;
-
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
 export type Order = typeof orders.$inferSelect;
-
 export type InsertNewsletter = z.infer<typeof insertNewsletterSchema>;
 export type Newsletter = typeof newsletters.$inferSelect;
-
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
 export type BlogPost = typeof blogPosts.$inferSelect;
