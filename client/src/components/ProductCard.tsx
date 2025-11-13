@@ -1,3 +1,4 @@
+// src/components/ProductCard.tsx
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,45 +38,75 @@ export default function ProductCard({
   category,
   recipeCount,
 }: ProductCardProps) {
+  const priceKES = Math.round(price * 82);
 
-  const handleBuyNow = () => {
-    const email = prompt("Enter your email (for receipt & download link)")?.trim();
-    if (!email || !email.includes("@") || !email.includes(".")) {
-      alert("Please enter a valid email.");
+  const handleAddToCart = () => {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const exists = cart.find((item: any) => item.id === id);
+    
+    if (exists) {
+      alert("Already in your cart");
       return;
     }
 
-    const phone = prompt("Enter your phone number (e.g. 0712345678)")?.trim();
-    if (!phone || phone.length < 9 || !/^\d+$/.test(phone)) {
-      alert("Please enter a valid phone number (digits only).");
+    cart.push({
+      id,
+      title,
+      priceKES,
+      image,
+    });
+
+    localStorage.setItem('cart', JSON.stringify(cart));
+    window.dispatchEvent(new Event('cartUpdated'));
+    alert(`${title} added to cart`);
+  };
+
+  const handleBuyNow = () => {
+    const email = prompt("Your email:")?.trim();
+    if (!email || !email.includes("@")) {
+      alert("Please enter a valid email");
+      return;
+    }
+
+    const phone = prompt("M-Pesa phone (07xxxxxxxx):")?.trim();
+    if (!phone || phone.length < 10 || !/^\d+$/.test(phone)) {
+      alert("Please enter a valid phone number");
       return;
     }
 
     window.payWithPaystack({
       email,
       phone,
-      amount: price,
+      amount: priceKES,
       recipeId: id,
       recipeName: title,
       onSuccess: (downloadUrl) => {
-        alert("Payment successful! 🎉 Download starting now...");
-        window.location.href = downloadUrl;
+        alert("Payment successful! Download starting...");
+        window.open(downloadUrl, '_blank');
       },
       onClose: () => {
-        alert("Payment cancelled. You can try again.");
+        alert("Payment cancelled");
       }
     });
   };
 
   return (
-    <Card className="group overflow-hidden hover-elevate transition-all" data-testid={`card-product-${id}`}>
+    <Card className="group overflow-hidden border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300">
       <CardHeader className="p-0">
-        <div className="relative aspect-[3/4] overflow-hidden bg-muted">
-          <img src={image} alt={title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-          {category && <Badge className="absolute top-3 left-3" variant="secondary">{category}</Badge>}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+        <div className="relative aspect-[3/4] overflow-hidden bg-gray-50">
+          <img 
+            src={image} 
+            alt={title} 
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+          />
+          {category && (
+            <Badge className="absolute top-3 left-3 bg-white/90 text-gray-700 border border-gray-300">
+              {category}
+            </Badge>
+          )}
+          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
             <Link href={`/product/${id}`}>
-              <Button size="sm" variant="secondary">
+              <Button size="sm" variant="secondary" className="bg-white/90 hover:bg-white">
                 <Eye className="h-4 w-4 mr-1" /> Quick View
               </Button>
             </Link>
@@ -83,29 +114,34 @@ export default function ProductCard({
         </div>
       </CardHeader>
 
-      <CardContent className="p-4">
+      <CardContent className="p-5">
         <Link href={`/product/${id}`}>
-          <h3 className="font-heading font-semibold text-lg mb-2 hover:text-primary transition-colors">{title}</h3>
+          <h3 className="font-medium text-lg text-gray-900 hover:text-gray-700 transition-colors line-clamp-2">
+            {title}
+          </h3>
         </Link>
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{description}</p>
-        {recipeCount && <p className="text-xs text-muted-foreground mb-2">{recipeCount} recipes included</p>}
-        <div className="flex items-center justify-between">
-          <span className="text-2xl font-heading font-bold text-primary">KSh {price}</span>
+        <p className="text-sm text-gray-600 mt-2 line-clamp-2">{description}</p>
+        {recipeCount && (
+          <p className="text-xs text-gray-500 mt-2">{recipeCount} recipes included</p>
+        )}
+        <div className="mt-4">
+          <span className="text-2xl font-semibold text-gray-900">
+            KSh {priceKES.toLocaleString()}
+          </span>
         </div>
       </CardContent>
 
-      <CardFooter className="p-4 pt-0 flex gap-3">
+      <CardFooter className="p-5 pt-0 flex gap-3">
         <Button
-          className="flex-1"
           variant="outline"
-          onClick={() => console.log(`Added ${title} to cart`)}
+          className="flex-1 border-gray-300 hover:border-gray-400"
+          onClick={handleAddToCart}
         >
           <ShoppingCart className="h-4 w-4 mr-2" />
           Add to Cart
         </Button>
-
         <Button
-          className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-lg"
+          className="flex-1 bg-black hover:bg-gray-800 text-white font-medium"
           onClick={handleBuyNow}
         >
           Buy Now
