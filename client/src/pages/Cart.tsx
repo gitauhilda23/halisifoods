@@ -1,129 +1,187 @@
-// src/pages/Cart.tsx
-import { useState, useEffect } from 'react';
-import { Link } from 'wouter';
-import { Trash2 } from 'lucide-react';
+// client/src/pages/Cart.tsx
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { X, ShoppingCart } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link } from "wouter";
+import { toast } from "sonner";
+
+interface CartItem {
+  id: string;
+  title: string;
+  priceKES: number;
+  image: string;
+}
 
 export default function Cart() {
-  const [cart, setCart] = useState<any[]>([]);
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('cart') || '[]');
-    setCart(saved);
+    const loadCart = () => {
+      const saved = localStorage.getItem("cart");
+      if (saved) {
+        setCartItems(JSON.parse(saved));
+      }
+    };
+    loadCart();
+    window.addEventListener("cartUpdated", loadCart);
+    return () => window.removeEventListener("cartUpdated", loadCart);
   }, []);
 
-  const removeFromCart = (id: number) => {
-    const updated = cart.filter(item => item.id !== id);
-    setCart(updated);
-    localStorage.setItem('cart', JSON.stringify(updated));
-    window.dispatchEvent(new Event('cartUpdated'));
+  const removeFromCart = (id: string) => {
+    const updated = cartItems.filter(item => item.id !== id);
+    localStorage.setItem("cart", JSON.stringify(updated));
+    setCartItems(updated);
+    window.dispatchEvent(new Event("cartUpdated"));
+    toast.success("Removed from cart");
   };
 
-  // 100% NaN-PROOF TOTAL
-  const totalKES = cart.reduce((sum, item) => sum + (Number(item.priceKES) || 0), 0);
+  const baseTotal = cartItems.reduce((sum, item) => sum + item.priceKES, 0);
+  const discount = cartItems.length >= 3 ? 400 : cartItems.length >= 2 ? 100 : 0;
+  const finalTotal = Math.max(baseTotal - discount, 0);
 
-  const checkout = () => {
-    if (totalKES === 0) return alert("Your cart is empty!");
+  const handleCheckout = () => {
+    if (cartItems.length === 0) return toast.error("Cart is empty");
+    if (!email.includes("@")) return toast.error("Enter valid email");
+    if (phone.length < 10) return toast.error("Enter valid M-PESA number");
 
-    const email = user?.email || prompt("Your email:") || "customer@gmail.com";
-    const phone = prompt("M-Pesa phone (07xxxxxxxx):") || "0712345678";
-
-    if (!email.includes("@") || phone.length < 10) {
-      alert("Enter valid email & phone");
-      return;
-    }
-
-    const items = cart.map(item => ({
+    const items = cartItems.map(item => ({
       recipeId: item.id,
       recipeName: item.title,
-      amount: Number(item.priceKES)
+      amount: item.priceKES, // ← KES (as in admin)
     }));
 
     (window as any).payWithPaystackCart({
       email,
       phone,
       items,
-      onSuccess: (urls: string[]) => {
-        alert(`PAID KSh ${totalKES.toLocaleString()}! ${urls.length} eBooks downloading...`);
-        urls.forEach(url => window.open(url, '_blank'));
-        localStorage.removeItem('cart');
-        setCart([]);
-        window.dispatchEvent(new Event('cartUpdated'));
+      onSuccess: () => {
+        toast.success(`Paid KSh ${finalTotal.toLocaleString()}! Downloading...`);
+        cartItems.forEach(item => {
+          const saved = localStorage.getItem("halisi-ebooks");
+          if (saved) {
+            const ebooks = JSON.parse(saved);
+            const ebook = ebooks.find((e: any) => e.id === item.id);
+            if (ebook?.pdfUrl) {
+              window.open(ebook.pdfUrl, "_blank");
+            }
+          }
+        });
+        localStorage.removeItem("cart");
+        setCartItems([]);
+        window.dispatchEvent(new Event("cartUpdated"));
       },
-      onClose: () => alert("Payment cancelled")
+      onClose: () => {
+        toast.info("Payment cancelled");
+      }
     });
   };
 
-  if (cart.length === 0) {
+  if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-24 px-6">
-        <div className="max-w-2xl mx-auto text-center">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Your cart is empty</h1>
-          <p className="text-gray-600 mb-8">Add some delicious recipe books!</p>
-          <Link href="/">
-            <Button className="bg-black hover:bg-gray-800 text-white px-12 py-6 text-lg">
-              Continue Shopping
+      <div className="min-h-screen flex flex-col">
+        <Header cartItemCount={0} />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <ShoppingCart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <p className="text-lg text-muted-foreground">Your cart is empty</p>
+            <Button asChild className="mt-4">
+              <Link href="/">Continue Shopping</Link>
             </Button>
-          </Link>
-        </div>
+          </div>
+        </main>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 px-6">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-900 text-center mb-2">Your Cart</h1>
-        {user && <p className="text-center text-gray-600 mb-10">Hi, {user.name} — your items are saved</p>}
+    <div className="min-h-screen flex flex-col">
+      <Header cartItemCount={cartItems.length} />
+      <main className="flex-1 py-12 px-4">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold mb-8">Your Cart</h1>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          {cart.map((item, index) => (
-            <div key={item.id} className={`flex items-center gap-6 p-6 ${index !== cart.length - 1 ? 'border-b border-gray-100' : ''}`}>
-              <img src={item.image} alt={item.title} className="w-24 h-24 rounded-lg object-cover border border-gray-200" />
-              
-              <div className="flex-1">
-                <h3 className="text-xl font-semibold text-gray-900">{item.title}</h3>
-                <p className="text-sm text-gray-500 mt-1">Digital download • Instant access</p>
-              </div>
-
-              <div className="text-right">
-                <p className="text-2xl font-bold text-gray-900">KSh {Number(item.priceKES).toLocaleString()}</p>
-                <button
+          <div className="space-y-4 mb-8">
+            {cartItems.map(item => (
+              <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                <img src={item.image} alt={item.title} className="w-16 h-16 object-cover rounded" />
+                <div className="flex-1">
+                  <h3 className="font-medium">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground">Digital download</p>
+                </div>
+                <p className="font-semibold">KSh {item.priceKES.toLocaleString()}</p>
+                <Button
+                  size="sm"
+                  variant="ghost"
                   onClick={() => removeFromCart(item.id)}
-                  className="text-red-600 hover:text-red-700 text-sm font-medium mt-2 flex items-center gap-1"
                 >
-                  <Trash2 className="w-4 h-4" /> Remove
-                </button>
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
 
-          <div className="bg-gray-50 p-8 border-t border-gray-200">
-            <div className="flex justify-between items-center mb-6">
-              <span className="text-2xl font-bold text-gray-900">Total</span>
-              <span className="text-3xl font-bold text-gray-900">KSh {totalKES.toLocaleString()}</span>
+          <div className="border-t pt-6 space-y-4">
+            <div className="flex justify-between text-lg">
+              <span>Subtotal</span>
+              <span>KSh {baseTotal.toLocaleString()}</span>
             </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-green-600">
+                <span>Discount ({cartItems.length}+ items)</span>
+                <span>- KSh {discount.toLocaleString()}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-xl font-bold">
+              <span>Total</span>
+              <span>KSh {finalTotal.toLocaleString()}</span>
+            </div>
+          </div>
 
-            <Button 
-              onClick={checkout}
-              className="w-full bg-black hover:bg-gray-800 text-white py-7 text-xl font-semibold rounded-xl"
-            >
-              Pay KSh {totalKES.toLocaleString()} via M-Pesa
+          <div className="mt-8 space-y-4">
+            <div>
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="you@example.com"
+              />
+            </div>
+            <div>
+              <Label>M-PESA Number</Label>
+              <Input
+                type="tel"
+                value={phone}
+                onChange={e => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                placeholder="07xxxxxxxx"
+                maxLength={10}
+              />
+            </div>
+          </div>
+
+          <Button
+            onClick={handleCheckout}
+            className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white"
+            size="lg"
+          >
+            Pay KSh {finalTotal.toLocaleString()} via M-Pesa
+          </Button>
+
+          <div className="text-center mt-4">
+            <Button variant="link" asChild>
+              <Link href="/">Continue Shopping</Link>
             </Button>
-
-            <Link href="/" className="block mt-4">
-              <Button variant="outline" className="w-full py-6 text-lg border-gray-300">
-                ← Continue Shopping
-              </Button>
-            </Link>
           </div>
         </div>
-
-        <p className="text-center text-sm text-gray-500 mt-8">
-          Secure payment • Instant download • No hidden fees
-        </p>
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 }

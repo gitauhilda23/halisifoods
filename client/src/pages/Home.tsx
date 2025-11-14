@@ -1,3 +1,4 @@
+// client/src/pages/Home.tsx
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
@@ -6,54 +7,79 @@ import CategoryCard from "@/components/CategoryCard";
 import TestimonialCard from "@/components/TestimonialCard";
 import BlogCard from "@/components/BlogCard";
 import NewsletterSection from "@/components/NewsletterSection";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link } from "wouter";
+import { toast, Toaster } from "sonner";
 
-
-import breakfastCover from "@assets/generated_images/Breakfast_recipes_eBook_cover_9d71df24.png";
-import mainDishCover from "@assets/generated_images/Main_dishes_eBook_cover_27176a57.png";
-import vegetarianCover from "@assets/generated_images/Vegetarian_recipes_eBook_cover_bb33c52b.png";
-import snacksCover from "@assets/generated_images/Snacks_eBook_cover_ede3e266.png";
+// Static category & blog images (kept)
 import categoryImage from "@assets/generated_images/Kenyan_ingredients_category_image_cff4edb2.png";
 import blogImage from "@assets/generated_images/Traditional_cooking_blog_image_a3fe7a34.png";
 
+interface Ebook {
+  id: string;
+  title: string;
+  description?: string;
+  price: number;
+  priceKES: number;
+  image: string;
+  coverUrl?: string;
+  pdfUrl?: string;
+  category?: string;
+  recipeCount?: number;
+}
+
 export default function Home() {
-  const featuredProducts = [
-    {
-      id: "1",
-      title: "Kenyan Breakfast Delights",
-      description: "Start your day with traditional Kenyan breakfast recipes including mandazi, chai, and more.",
-      price: 12.99,
-      image: breakfastCover,
-      category: "Breakfast",
-      recipeCount: 25,
-    },
-    {
-      id: "2",
-      title: "Classic Main Dishes",
-      description: "Master the art of preparing authentic Kenyan main courses like pilau, ugali, and nyama choma.",
-      price: 15.99,
-      image: mainDishCover,
-      category: "Main Dishes",
-      recipeCount: 35,
-    },
-    {
-      id: "3",
-      title: "Vegetarian Favorites",
-      description: "Discover delicious plant-based Kenyan recipes featuring fresh vegetables and traditional spices.",
-      price: 11.99,
-      image: vegetarianCover,
-      category: "Vegetarian",
-      recipeCount: 28,
-    },
-    {
-      id: "4",
-      title: "Snacks & Street Food",
-      description: "Learn to make popular Kenyan snacks and street food favorites at home.",
-      price: 9.99,
-      image: snacksCover,
-      category: "Snacks",
-      recipeCount: 20,
-    },
-  ];
+  const [liveEbooks, setLiveEbooks] = useState<Ebook[]>([]);
+
+  useEffect(() => {
+    const loadEbooks = () => {
+      const saved = localStorage.getItem("halisi-ebooks");
+      if (saved) {
+        const uploaded = JSON.parse(saved).map((book: any) => ({
+          id: book.id,
+          title: book.title,
+          price: typeof book.price === "string"
+            ? parseInt(book.price.replace(/[^0-9]/g, ""), 10) || 0
+            : book.price,
+          priceKES: typeof book.price === "string"
+            ? parseInt(book.price.replace(/[^0-9]/g, ""), 10) || 0
+            : book.price,
+          image: book.coverUrl,
+          coverUrl: book.coverUrl,
+          pdfUrl: book.pdfUrl,
+          description: book.description || `Authentic ${book.title} recipes`,
+          category: book.category || "Uncategorized",
+          recipeCount: book.recipeCount || 20,
+        }));
+        setLiveEbooks(uploaded);
+      }
+    };
+    loadEbooks();
+    window.addEventListener("storage", loadEbooks);
+    return () => window.removeEventListener("storage", loadEbooks);
+  }, []);
+
+  const handleAddToCart = (product: Ebook) => {
+    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    if (cart.find((item: any) => item.id === product.id)) {
+      toast.warning("Already in cart!");
+      return;
+    }
+    cart.push({
+      id: product.id,
+      title: product.title,
+      priceKES: product.priceKES,
+      image: product.coverUrl || product.image,
+    });
+    localStorage.setItem("cart", JSON.stringify(cart));
+    window.dispatchEvent(new Event("cartUpdated"));
+    toast.success(`${product.title} added to cart!`);
+  };
+
+  // ONLY LIVE eBOOKS — NO DUMMIES
+  const featuredProducts = liveEbooks.slice(0, 4);
 
   const categories = [
     { name: "Traditional Dishes", image: categoryImage, ebookCount: 15, slug: "traditional" },
@@ -115,28 +141,59 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header cartItemCount={0} />
-     
       <main className="flex-1">
         <HeroSection />
-
-        
+        <Toaster position="top-center" richColors />
 
         {/* Featured Products */}
         <section className="py-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="font-heading text-3xl sm:text-4xl font-bold mb-4" data-testid="text-featured-title">
-                Featured Recipe Collections
+              <h2 className="font-heading text-3xl sm:text-4xl font-bold mb-4">
+                {liveEbooks.length > 0 ? "Available eBooks" : "No eBooks Available"}
               </h2>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                Explore our most popular eBook collections featuring authentic Kenyan recipes
+                {liveEbooks.length > 0
+                  ? "Fresh from our kitchen — add to cart and pay securely"
+                  : "Check back soon for new recipe collections"}
               </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredProducts.map((product) => (
-                <ProductCard key={product.id} {...product} />
-              ))}
-            </div>
+
+            {liveEbooks.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {featuredProducts.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    id={product.id}
+                    title={product.title}
+                    description={product.description || "Authentic Kenyan recipes"}
+                    price={0}
+                    priceKES={product.priceKES}
+                    image={product.coverUrl || product.image}
+                    category={product.category}
+                    recipeCount={product.recipeCount}
+                    pdfUrl={product.pdfUrl}
+                    onAddToCart={() => handleAddToCart(product)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground text-lg">
+                  No eBooks available yet. Check back soon!
+                </p>
+              </div>
+            )}
+
+            {liveEbooks.length > 0 && (
+              <div className="text-center mt-8">
+                <Button size="lg" asChild>
+                  <Link href="/catalog">
+                    View All eBooks <ArrowRight className="w-4 h-4 ml-2" />
+                  </Link>
+                </Button>
+              </div>
+            )}
           </div>
         </section>
 
@@ -144,7 +201,7 @@ export default function Home() {
         <section className="py-16 px-4 sm:px-6 lg:px-8 bg-muted">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="font-heading text-3xl sm:text-4xl font-bold mb-4" data-testid="text-categories-title">
+              <h2 className="font-heading text-3xl sm:text-4xl font-bold mb-4">
                 Browse by Category
               </h2>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
@@ -165,7 +222,7 @@ export default function Home() {
         <section className="py-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="font-heading text-3xl sm:text-4xl font-bold mb-4" data-testid="text-testimonials-title">
+              <h2 className="font-heading text-3xl sm:text-4xl font-bold mb-4">
                 What Our Customers Say
               </h2>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
@@ -184,7 +241,7 @@ export default function Home() {
         <section className="py-16 px-4 sm:px-6 lg:px-8 bg-muted">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="font-heading text-3xl sm:text-4xl font-bold mb-4" data-testid="text-blog-title">
+              <h2 className="font-heading text-3xl sm:text-4xl font-bold mb-4">
                 Recipe Tips & Stories
               </h2>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
