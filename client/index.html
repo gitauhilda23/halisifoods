@@ -12,47 +12,41 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
-  
-    <!-- YOUR ORIGINAL WORKING SCRIPT — WE KEEP v1 BECAUSE IT WORKS WITH YOUR KEY -->
+    
+    <!-- PAYSTACK LIVE SCRIPT -->
     <script src="https://js.paystack.co/v1/inline.js"></script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
 
-    <!-- SINGLE PURCHASE — SAME AS BEFORE BUT SILENT CLOSE (NO MORE ANNOYING ALERT) -->
+    <!-- SINGLE PURCHASE — LIVE MODE — NO BACKEND -->
     <script>
-      window.payWithPaystack = function({ email, phone, amount, recipeId, recipeName, onSuccess, onClose }) {
+      window.payWithPaystack = function({ email, phone, amount, recipeId, recipeName, metadata = {}, onSuccess, onClose }) {
         const handler = PaystackPop.setup({
           key: 'pk_live_b1bc14d3250387de5175b9ebb291d9101904c741',
           email: email,
           amount: amount * 100,
           currency: 'KES',
           ref: 'MFR_' + Date.now() + '_' + Math.floor(Math.random() * 1000000000),
-          metadata: { recipeId, recipeName, phone },
+          metadata: {
+            recipeId,
+            recipeName,
+            phone,
+            ...metadata
+          },
           callback: function(response) {
-            fetch('/api/verify-payment', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                reference: response.reference,
-                recipeId: recipeId,
-                email: email,
-                phone: phone
-              })
-            })
-            .then(r => r.json())
-            .then(data => {
-              if (data.success && data.downloadUrl && onSuccess) {
-                onSuccess(data.downloadUrl);
-              } else {
-                alert('Payment failed. Contact support@myfoodsandrecipes.com');
-              }
-            })
-            .catch(() => alert('Network error. Try again.'));
+            // LIVE MODE — SKIP BACKEND — USE LOCAL PDF
+            const finalUrl = metadata.pdfUrl || '#';
+            if (finalUrl && finalUrl !== '#') {
+              onSuccess(finalUrl);
+            } else {
+              alert('PDF not found. Contact support.');
+              onSuccess('#');
+            }
           },
           onClose: () => {
-            console.log("Payment closed silently"); // SILENT — NO MORE "Payment cancelled" ALERT
+            console.log("Payment closed");
             onClose?.();
           }
         });
@@ -60,12 +54,12 @@
       };
     </script>
 
-    <!-- CART PURCHASE — SAME AS BEFORE BUT SILENT -->
+    <!-- CART PURCHASE — LIVE MODE — NO BACKEND -->
     <script>
       window.payWithPaystackCart = function({ email, phone, items, onSuccess, onClose }) {
         const baseTotal = items.reduce((sum, i) => sum + i.amount, 0);
         const discount = items.length >= 3 ? 400 : items.length >= 2 ? 100 : 0;
-        const finalAmount = baseTotal - discount;
+        const finalAmount = Math.max(baseTotal - discount, 0);
 
         const handler = PaystackPop.setup({
           key: 'pk_live_b1bc14d3250387de5175b9ebb291d9101904c741',
@@ -77,31 +71,18 @@
             phone,
             cart_size: items.length,
             discount: discount,
-            items: items.map(i => ({ id: i.recipeId, name: i.recipeName, price: i.amount }))
+            items: items.map(i => ({
+              id: i.recipeId,
+              name: i.recipeName,
+              price: i.amount
+            }))
           },
           callback: function(response) {
-            fetch('/api/verify-payment-cart', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                reference: response.reference,
-                email: email,
-                phone: phone,
-                items: items
-              })
-            })
-            .then(r => r.json())
-            .then(data => {
-              if (data.success && data.downloadUrls) {
-                onSuccess(data.downloadUrls, finalAmount, discount);
-              } else {
-                alert('Payment failed. Contact support@myfoodsandrecipes.com');
-              }
-            })
-            .catch(() => alert('Network error. Try again.'));
+            // LIVE MODE — SKIP BACKEND — RETURN EMPTY URLS
+            onSuccess([], finalAmount, discount);
           },
           onClose: () => {
-            console.log("Cart payment closed silently"); // SILENT
+            console.log("Cart payment closed");
             onClose?.();
           }
         });
