@@ -1,5 +1,5 @@
-My Foods & Recipes Website Architectural Design
-Website Overview - Website Name: My Foods & Recipes - Domain: myfoodsandrecipes.com - Purpose:
+Halisi foods & Recipes Website Architectural Design
+Website Overview - Website Name: Halisi foods & Recipes - Domain: myfoodsandrecipes.com - Purpose:
 Sell Kenyan recipe eBooks, provide recipe previews, build an email list, and offer secure digital downloads. -
 Target Users: Health-conscious individuals, Kenyan cuisine enthusiasts, international audience interested in
 African recipes. - Color Theme: - Primary: #ced000 - Secondary: #693e1e

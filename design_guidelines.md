@@ -1,4 +1,4 @@
-# Design Guidelines: My Foods & Recipes - Kenyan eBook Marketplace
+# Design Guidelines: Halisi foods & Recipes - Kenyan eBook Marketplace
 
 ## Design Approach
 **Reference-Based E-Commerce Design** drawing from Shopify, Etsy, and the provided theme references (eMart, Libreria, AnySell), adapted for a culturally-rich Kenyan cuisine marketplace with warm, earthy aesthetics that evoke African culinary heritage.

@@ -11,7 +11,7 @@ export default function About() {
             About Halisi Foods & Recipes
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            My Foods & Recipes brings you authentic Kenyan cuisine through comprehensive digital
+            Halisi foods & Recipes brings you authentic Kenyan cuisine through comprehensive digital
             cookbooks. Discover traditional recipes and modern twists, all in one place.
           </p>
         </div>
