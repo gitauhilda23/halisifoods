@@ -35,7 +35,7 @@
    - Large background image showing vibrant Kenyan cuisine/ingredients
    - Overlay with centered headline and subheadline
    - Primary CTA button (blurred background for contrast)
-   - Trust indicators below ("500+ Authentic Recipes" badge/text)
+   - Trust indicators below ("200+ Authentic Recipes" badge/text)
 
 2. **Featured eBooks Grid** (4-column desktop, 2 tablet, 1 mobile)
    - Product cards with hover lift effect (subtle transform)

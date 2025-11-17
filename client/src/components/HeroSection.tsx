@@ -37,7 +37,7 @@ export default function HeroSection() {
         </div>
         <div className="mt-12 flex flex-wrap justify-center gap-8 text-white/80">
           <div className="text-center">
-            <div className="text-3xl font-heading font-bold text-primary">500+</div>
+            <div className="text-3xl font-heading font-bold text-primary">200+</div>
             <div className="text-sm">Authentic Recipes</div>
           </div>
           <div className="text-center">
