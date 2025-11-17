@@ -21,7 +21,7 @@ export default function HeroSection() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/catalog">
             <Button size="lg" variant="default" className="text-lg" data-testid="button-hero-browse">
-              Browse Recipes
+              Download ebook
             </Button>
           </Link>
           <Link href="/about">

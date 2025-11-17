@@ -69,7 +69,7 @@ async function seed() {
       title: "Quick Weeknight Dinners",
       description: "Easy and delicious Kenyan recipes perfect for busy weeknights. Get dinner on the table in 30 minutes or less.",
       price: "10.99",
-      category: "Quick & Easy",
+      category: "Healthy Recipes",
       recipeCount: 22,
       imageUrl: "/assets/generated_images/Vegetarian_recipes_eBook_cover_bb33c52b.png",
       ingredients: ["Vegetables", "Rice", "Beans", "Spices", "Eggs", "Tomatoes"],

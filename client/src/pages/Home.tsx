@@ -82,9 +82,9 @@ export default function Home() {
   const featuredProducts = liveEbooks.slice(0, 4);
 
   const categories = [
-    { name: "Traditional Dishes", image: categoryImage, ebookCount: 15, slug: "traditional" },
-    { name: "Modern Fusion", image: categoryImage, ebookCount: 8, slug: "fusion" },
-    { name: "Quick & Easy", image: categoryImage, ebookCount: 12, slug: "quick" },
+    { name: "Kenyan Recipes", image: categoryImage, ebookCount: 15, slug: "traditional" },
+    { name: "Baby Meal Recipes ", image: categoryImage, ebookCount: 8, slug: "fusion" },
+    { name: "Healthy Recipes", image: categoryImage, ebookCount: 12, slug: "quick" },
   ];
 
   const testimonials = [

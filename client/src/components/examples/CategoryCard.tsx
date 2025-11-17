@@ -5,7 +5,7 @@ export default function CategoryCardExample() {
   return (
     <div className="max-w-md">
       <CategoryCard
-        name="Traditional Dishes"
+        name="Kenyan Recipes"
         image={categoryImage}
         ebookCount={15}
         slug="traditional"

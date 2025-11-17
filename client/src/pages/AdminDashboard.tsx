@@ -41,7 +41,7 @@ export default function AdminDashboard() {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
-  const [category, setCategory] = useState("Traditional Dishes");
+  const [category, setCategory] = useState("Kenyan Recipes");
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState("");
@@ -73,7 +73,7 @@ export default function AdminDashboard() {
   const resetForm = () => {
     setTitle("");
     setPrice("");
-    setCategory("Traditional Dishes");
+    setCategory("Kenyan Recipes");
     setCoverFile(null);
     setPdfFile(null);
     setCoverPreview("");
@@ -147,8 +147,8 @@ export default function AdminDashboard() {
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Traditional Dishes">Traditional Dishes</SelectItem>
-                          <SelectItem value="Modern Fusion">Modern Fusion</SelectItem>
+                          <SelectItem value="Kenyan Recipes">Kenyan Recipes</SelectItem>
+                          <SelectItem value="Baby Meal Recipes ">Baby Meal Recipes </SelectItem>
                           <SelectItem value="Quick and Easy">Quick and Easy</SelectItem>
                         </SelectContent>
                       </Select>
