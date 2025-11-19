@@ -24,6 +24,7 @@ interface Ebook {
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
+  
   const [ebooks, setEbooks] = useState<Ebook[]>(() => {
     const saved = localStorage.getItem("halisi-ebooks");
     if (!saved) return [];
@@ -36,11 +37,12 @@ export default function AdminDashboard() {
     }));
   });
 
+  // Save to localStorage whenever ebooks change
   useEffect(() => {
     localStorage.setItem("halisi-ebooks", JSON.stringify(ebooks));
   }, [ebooks]);
 
-  // Form state
+  // Form states
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
@@ -54,6 +56,7 @@ export default function AdminDashboard() {
 
   const handleAddEbook = () => {
     if (!title || !coverFile || !pdfFile) return;
+
     setIsUploading(true);
 
     const coverUrl = URL.createObjectURL(coverFile);
@@ -89,6 +92,12 @@ export default function AdminDashboard() {
   };
 
   const handleDelete = (id: string) => {
+    // Optional: revoke blob URLs to free memory
+    const book = ebooks.find(b => b.id === id);
+    if (book) {
+      URL.revokeObjectURL(book.coverUrl);
+      URL.revokeObjectURL(book.pdfUrl);
+    }
     setEbooks(ebooks.filter(b => b.id !== id));
   };
 
@@ -111,6 +120,7 @@ export default function AdminDashboard() {
           </TabsList>
 
           <TabsContent value="ebooks" className="space-y-6">
+            {/* Add New eBook Button */}
             <div className="flex justify-end">
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
@@ -119,17 +129,21 @@ export default function AdminDashboard() {
                   </Button>
                 </DialogTrigger>
 
-                {/* FIXED: Scrollable dialog */}
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle className="text-2xl">Upload New eBook</DialogTitle>
                   </DialogHeader>
 
                   <div className="space-y-6 py-4">
+                    {/* Title & Price */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label>Title</Label>
-                        <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Kenyan Desserts Masterclass" />
+                        <Input
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                          placeholder="Kenyan Desserts Masterclass"
+                        />
                       </div>
                       <div>
                         <Label>Price (KES)</Label>
@@ -137,14 +151,17 @@ export default function AdminDashboard() {
                           type="number"
                           min="0"
                           value={price}
-                          onChange={e => setPrice(e.target.value)}
+                          onChange={(e) => setPrice(e.target.value)}
                           placeholder="30"
                           className="font-mono text-lg"
                         />
-                        <p className="text-sm text-muted-foreground mt-1">Enter amount in KES (0 = free)</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Enter amount in KES (0 = free)
+                        </p>
                       </div>
                     </div>
 
+                    {/* Category */}
                     <div>
                       <Label>Category</Label>
                       <Select value={category} onValueChange={setCategory}>
@@ -159,6 +176,7 @@ export default function AdminDashboard() {
                       </Select>
                     </div>
 
+                    {/* Promotion Options */}
                     <div className="space-y-4 p-5 bg-amber-50 rounded-xl border border-amber-200">
                       <p className="font-bold text-amber-900 flex items-center gap-2">
                         <Flame className="w-6 h-6" /> Promotion Options
@@ -175,7 +193,6 @@ export default function AdminDashboard() {
                         <label htmlFor="free" className="flex items-center gap-2 cursor-pointer text-sm">
                           <Gift className="w-5 h-5 text-green-600" />
                           <span className="font-medium">Offer as Free Download</span>
-                          <span className="text-muted-foreground">(Appears in homepage hero)</span>
                         </label>
                       </div>
                       <div className="flex items-center space-x-3">
@@ -187,11 +204,11 @@ export default function AdminDashboard() {
                         <label htmlFor="bestseller" className="flex items-center gap-2 cursor-pointer text-sm">
                           <Flame className="w-5 h-5 text-orange-600" />
                           <span className="font-medium">Mark as Best Seller</span>
-                          <span className="text-muted-foreground">(Shows in Best Sellers section)</span>
                         </label>
                       </div>
                     </div>
 
+                    {/* Cover Image */}
                     <div>
                       <Label>Cover Image</Label>
                       <Input
@@ -206,10 +223,15 @@ export default function AdminDashboard() {
                         }}
                       />
                       {coverPreview && (
-                        <img src={coverPreview} alt="Cover preview" className="mt-4 w-full h-80 object-cover rounded-lg border shadow-md" />
+                        <img
+                          src={coverPreview}
+                          alt="Cover preview"
+                          className="mt-4 w-full max-w-md mx-auto h-96 object-cover rounded-lg border shadow-md"
+                        />
                       )}
                     </div>
 
+                    {/* PDF File */}
                     <div>
                       <Label>eBook PDF</Label>
                       <Input
@@ -224,6 +246,7 @@ export default function AdminDashboard() {
                       )}
                     </div>
 
+                    {/* Buttons */}
                     <div className="flex justify-end gap-4 pt-6 border-t">
                       <Button variant="outline" onClick={() => { setOpen(false); resetForm(); }}>
                         Cancel
@@ -241,30 +264,46 @@ export default function AdminDashboard() {
               </Dialog>
             </div>
 
-            {/* eBooks Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* eBooks Grid – BEAUTIFUL COVERS FIXED */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {ebooks.map((book) => (
-                <Card key={book.id} className="overflow-hidden relative">
+                <Card key={book.id} className="overflow-hidden relative hover:shadow-xl transition-shadow duration-300">
+                  {/* Badges */}
                   {book.isFreeEbook && (
-                    <div className="absolute top-3 left-3 bg-green-600 text-white px-4 py-1.5 rounded-full text-xs font-bold z-10 shadow-lg">
+                    <div className="absolute top-4 left-4 bg-green-600 text-white px-4 py-1.5 rounded-full text-xs font-bold z-10 shadow-lg">
                       FREE GIFT
                     </div>
                   )}
                   {book.isBestSeller && (
-                    <div className="absolute top-3 right-3 bg-orange-600 text-white px-4 py-1.5 rounded-full text-xs font-bold z-10 flex items-center gap-1 shadow-lg">
+                    <div className="absolute top-4 right-4 bg-orange-600 text-white px-4 py-1.5 rounded-full text-xs font-bold z-10 flex items-center gap-1 shadow-lg">
                       <Flame className="w-4 h-4" /> BEST SELLER
                     </div>
                   )}
-                  <img src={book.coverUrl} alt={book.title} className="w-full h-64 object-cover" />
+
+                  {/* Cover Image – Perfect Size & Ratio */}
+                  <div className="relative w-full aspect-[3/4] bg-gray-100">
+                    <img
+                      src={book.coverUrl}
+                      alt={book.title}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      loading="eager"
+                    />
+                  </div>
+
                   <CardContent className="p-5">
-                    <h3 className="font-bold text-lg truncate">{book.title}</h3>
-                    <p className="text-sm text-muted-foreground">{book.category}</p>
-                    <p className="text-2xl font-bold text-amber-600 mt-2">
+                    <h3 className="font-bold text-lg line-clamp-2">{book.title}</h3>
+                    <p className="text-sm text-muted-foreground mt-1">{book.category}</p>
+                    <p className="text-2xl font-bold text-amber-600 mt-3">
                       {book.isFreeEbook ? "FREE" : `KSh ${book.price.toLocaleString()}`}
                     </p>
-                    <div className="flex justify-between items-center mt-4">
+
+                    <div className="flex justify-between items-center mt-5">
                       <span className="text-sm text-muted-foreground">{book.sales} sales</span>
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(book.id)}>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(book.id)}
+                      >
                         <Trash2 className="h-4 w-4 mr-1" /> Delete
                       </Button>
                     </div>
@@ -273,6 +312,7 @@ export default function AdminDashboard() {
               ))}
             </div>
 
+            {/* Empty State */}
             {ebooks.length === 0 && (
               <div className="text-center py-20 text-muted-foreground">
                 <FileText className="h-16 w-16 mx-auto mb-4 opacity-30" />
@@ -281,11 +321,31 @@ export default function AdminDashboard() {
             )}
           </TabsContent>
 
+          {/* Other Tabs */}
           <TabsContent value="overview">
-            <Card><CardContent className="py-16 text-center"><p className="text-5xl font-bold">{ebooks.length}</p><p className="text-xl mt-2">eBooks Published</p></CardContent></Card>
+            <Card>
+              <CardContent className="py-16 text-center">
+                <p className="text-5xl font-bold">{ebooks.length}</p>
+                <p className="text-xl mt-2">eBooks Published</p>
+              </CardContent>
+            </Card>
           </TabsContent>
-          <TabsContent value="orders"><Card><CardContent className="py-16 text-center text-muted-foreground">Orders coming soon</CardContent></Card></TabsContent>
-          <TabsContent value="newsletter"><Card><CardContent className="py-16 text-center text-muted-foreground">2,456 subscribers</CardContent></Card></TabsContent>
+
+          <TabsContent value="orders">
+            <Card>
+              <CardContent className="py-16 text-center text-muted-foreground">
+                Orders coming soon
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="newsletter">
+            <Card>
+              <CardContent className="py-16 text-center text-muted-foreground">
+                2,456 subscribers
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
     </div>

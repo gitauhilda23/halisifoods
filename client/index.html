@@ -9,23 +9,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
-    
+   
     <script src="https://js.paystack.co/v1/inline.js"></script>
   </head>
-
   <body class="font-sans relative">
-
     <!-- Main React App -->
     <div id="root"></div>
-
-    <!-- NEW BOOKS ALERT BUTTON - ONLY ON HOMEPAGE -->
-    <div id="home-alert-button" class="fixed top-20 md:top-24 left-1/2 transform -translate-x-1/2 z-50">
-      <a href="/catalog"
-         class="inline-block px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs md:text-sm 
-                rounded-full shadow-2xl transition hover:scale-105 animate-pulse border-3 border-white uppercase tracking-wider">
-        New Books Alert →
-      </a>
-    </div>
 
     <script type="module" src="/src/main.tsx"></script>
 
@@ -69,18 +58,5 @@
         handler.openIframe();
       };
     </script>
-
-    <!-- HIDE BUTTON IF NOT ON HOMEPAGE -->
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const button = document.getElementById('home-alert-button');
-        const isHomePage = window.location.pathname === '/' || window.location.pathname === '/index.html';
-        
-        if (!isHomePage) {
-          button.style.display = 'none';
-        }
-      });
-    </script>
-
   </body>
 </html>
