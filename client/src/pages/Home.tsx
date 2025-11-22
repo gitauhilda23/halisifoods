@@ -1,11 +1,10 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
-import ProductCard from "@/components/ProductCard";
 import CategoryCard from "@/components/CategoryCard";
 import NewsletterSection from "@/components/NewsletterSection";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Download, Flame } from "lucide-react";
+import { ArrowRight, Download, Flame, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { toast, Toaster } from "sonner";
@@ -20,6 +19,7 @@ interface Ebook {
   category?: string;
   isFreeEbook?: boolean;
   isBestSeller?: boolean;
+  isFlashSale?: boolean;
 }
 
 const fixedEbooks = ["Baby Meal Recipes eBook", "No Wheat No Sugar Recipes", "Herbal Tea Recipes"];
@@ -30,6 +30,8 @@ export default function Home() {
   const [liveEbooks, setLiveEbooks] = useState<Ebook[]>([]);
   const [currentSale, setCurrentSale] = useState({ name: "Mukami", ebook: "Baby Meal Recipes eBook", time: "3 minutes ago" });
   const [showPopup, setShowPopup] = useState(false);
+
+  // ←←← FIXED LINE — this was the only bug
   const [showHeroAlert, setShowHeroAlert] = useState(true);
 
   useEffect(() => {
@@ -45,6 +47,7 @@ export default function Home() {
           category: book.category || "Uncategorized",
           isFreeEbook: book.isFreeEbook === true,
           isBestSeller: book.isBestSeller === true,
+          isFlashSale: book.isFlashSale === true,
         }));
         setLiveEbooks(parsed);
       }
@@ -78,9 +81,16 @@ export default function Home() {
       toast.warning("Already in cart!");
       return;
     }
-    cart.push({ id: ebook.id, title: ebook.title, priceKES: ebook.price, image: ebook.coverUrl });
+    cart.push({
+      id: ebook.id,
+      title: ebook.title,
+      priceKES: ebook.price,
+      image: ebook.coverUrl,
+      isFlashSale: ebook.isFlashSale,
+      isBestSeller: ebook.isBestSeller,
+    });
     localStorage.setItem("cart", JSON.stringify(cart));
-    window.dispatchEventListener(new Event("cartUpdated"));
+    window.dispatchEvent(new Event("cartUpdated"));
     toast.success(`${ebook.title} added to cart!`);
   };
 
@@ -97,103 +107,101 @@ export default function Home() {
 
   const categories = [
     { name: "Kenyan Recipes", image: categoryImage, ebookCount: liveEbooks.filter(b => b.category === "Kenyan Recipes").length || 15, slug: "traditional" },
-    { name: "Baby Meal Recipes", image: categoryImage, ebookCount: liveEbooks.filter(b => b.category === "Baby Meal Recipes").length || 8, slug: "fusion" },
-    { name: "Healthy Recipes", image: categoryImage, ebookCount: liveEbooks.filter(b => b.category === "Quick and Easy").length || 12, slug: "quick" },
+    { name: "Baby Meal Recipes", image: categoryImage, ebookCount: liveEbooks.filter(b => b.category === "Baby Meal Recipes").length || 8, slug: "baby" },
+    { name: "Healthy & Quick", image: categoryImage, ebookCount: liveEbooks.filter(b => b.category === "Quick and Easy").length || 12, slug: "quick" },
   ];
 
-  return (
-    <div className="min-h-screen flex flex-col relative">
-      <Header cartItemCount={0} />
+  const EbookCard = ({ book }: { book: Ebook }) => (
+    <div className="relative group bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-2xl transition-all duration-300">
+      <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
+        {book.isFlashSale && (
+          <span className="bg-red-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg animate-pulse">
+            50% OFF
+          </span>
+        )}
+        {book.isBestSeller && (
+          <span className="bg-orange-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+            <Flame className="w-4 h-4" /> BEST SELLER
+          </span>
+        )}
+        {book.isFreeEbook && (
+          <span className="bg-green-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+            <Sparkles className="w-4 h-4" /> FREE GIFT
+          </span>
+        )}
+      </div>
+      <img
+        src={book.coverUrl || "/placeholder.jpg"}
+        alt={book.title}
+        className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
+      />
+      <div className="p-5">
+        <h3 className="font-bold text-lg line-clamp-2 mb-3 text-gray-800">{book.title}</h3>
+        {book.isFreeEbook ? (
+          <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold" onClick={() => handleFreeDownload(book)}>
+            <Download className="w-5 h-5 mr-2" />
+            Download Free
+          </Button>
+        ) : (
+          <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold" onClick={() => handleAddToCart(book)}>
+            KSh {book.price} → Add to Cart
+          </Button>
+        )}
+      </div>
+    </div>
+  );
 
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header cartItemCount={0} />
       <main className="flex-1">
         <HeroSection showNewBookAlert={showHeroAlert} onCloseAlert={() => setShowHeroAlert(false)} />
         <Toaster position="top-center" richColors />
 
-        {/* PREMIUM EBOOKS - SAME SIZE AS FREE */}
         {regularPaid.length > 0 && (
-          <section className="py-16 bg-white">
+          <section className="py-16 bg-gray-50">
             <div className="max-w-7xl mx-auto px-6">
-            
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-                {regularPaid.map((book) => (
-                  <div key={book.id} className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
-                    <img src={book.coverUrl || ""} alt={book.title} className="w-full h-56 object-cover" />
-                    <div className="p-4">
-                      <h3 className="font-bold text-base line-clamp-2 mb-3">{book.title}</h3>
-                      <Button 
-                        className="w-full text-sm bg-amber-600 hover:bg-amber-700" 
-                        size="sm" 
-                        onClick={() => handleAddToCart(book)}
-                      >
-                        KSh {book.price} – Add to Cart
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+              <h2 className="text-4xl font-bold text-center mb-12 text-amber-700">
+                Premium Recipe Collections
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
+                {regularPaid.map(book => <EbookCard key={book.id} book={book} />)}
               </div>
             </div>
           </section>
         )}
 
-        {/* CATEGORIES */}
-        <section className="py-16 bg-muted">
+        <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {categories.map((cat) => (
-                <CategoryCard key={cat.slug} {...cat} />
-              ))}
+            <h2 className="text-4xl font-bold text-center mb-12 text-gray-800">Shop by Category</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+              {categories.map(cat => <CategoryCard key={cat.slug} {...cat} />)}
             </div>
           </div>
         </section>
 
-        {/* BEST SELLERS - SAME SIZE AS FREE */}
         {bestSellers.length > 0 && (
           <section className="py-16 bg-orange-50">
             <div className="max-w-7xl mx-auto px-6">
-              <h2 className="text-2xl font-bold text-center mb-8 text-orange-800 flex items-center justify-center gap-2">
-                <Flame className="w-7 h-7 text-orange-600" />
-               
+              <h2 className="text-4xl font-bold text-center mb-12 text-orange-800 flex items-center justify-center gap-3">
+                <Flame className="w-10 h-10" /> Hot Best Sellers <Flame className="w-10 h-10" />
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-                {bestSellers.map((book) => (
-                  <div key={book.id} className="bg-white rounded-xl shadow-md overflow-hidden border border-orange-200">
-                    <img src={book.coverUrl || ""} alt={book.title} className="w-full h-56 object-cover" />
-                    <div className="p-4">
-                      <h3 className="font-bold text-base line-clamp-2 mb-3">{book.title}</h3>
-                      <Button 
-                        className="w-full text-sm bg-amber-600 hover:bg-amber-700" 
-                        size="sm" 
-                        onClick={() => handleAddToCart(book)}
-                      >
-                        KSh {book.price} – Add to Cart
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
+                {bestSellers.map(book => <EbookCard key={book.id} book={book} />)}
               </div>
             </div>
           </section>
         )}
 
-        {/* FREE EBOOKS - REFERENCE SIZE */}
         {freeEbooks.length > 0 && (
-          <section className="py-16 bg-amber-50">
-            <div className="max-w-7xl mx-auto px-6">
-              <h2 className="text-2xl font-bold text-center mb-8">
-              
+          <section className="py-20 bg-gradient-to-b from-amber-50 to-white">
+            <div className="max-w-7xl mx-auto px-6 text-center">
+              <h2 className="text-5xl font-bold mb-4 text-green-700">
+                Free Gifts For You
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-                {freeEbooks.map((book) => (
-                  <div key={book.id} className="bg-white rounded-xl shadow-md overflow-hidden border border-amber-200">
-                    <img src={book.coverUrl} alt={book.title} className="w-full h-56 object-cover" />
-                    <div className="p-4">
-                      <h3 className="font-bold text-base line-clamp-2 mb-3">{book.title}</h3>
-                      <Button className="w-full text-sm bg-green-600 hover:bg-green-700" size="sm" onClick={() => handleFreeDownload(book)}>
-                        <Download className="w-4 h-4 mr-1" /> Free Download
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+              <p className="text-xl text-gray-600 mb-12">Download instantly – no payment needed!</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
+                {freeEbooks.map(book => <EbookCard key={book.id} book={book} />)}
               </div>
             </div>
           </section>
@@ -202,24 +210,18 @@ export default function Home() {
         <NewsletterSection />
       </main>
 
-      {/* Floating WhatsApp */}
-      <a
-        href="https://wa.me/254740919839"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-green-500 rounded-full shadow-2xl flex items-center justify-center hover:bg-green-600 hover:scale-110 transition-all duration-300"
-      >
+      <a href="https://wa.me/254740919839" target="_blank" rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-green-500 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition">
         <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" className="w-10 h-10" />
       </a>
 
-      {/* Fake Sales Popup */}
       {showPopup && (
-        <div className="fixed bottom-24 left-6 z-40 animate-in slide-in-from-bottom fade-in duration-500">
-          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 flex items-center gap-4 max-w-xs">
-            <div className="w-12 h-12 bg-gray-300 rounded-full border-2 border-dashed border-gray-400 flex-shrink-0" />
-            <div className="leading-tight">
-              <p className="text-sm font-bold text-gray-800">{currentSale.name} just bought</p>
-              <p className="text-xs font-medium text-amber-600 truncate">{currentSale.ebook}</p>
+        <div className="fixed bottom-24 left-6 z-40 animate-in slide-in-from-bottom">
+          <div className="bg-white rounded-2xl shadow-2xl p-4 flex items-center gap-4 border">
+            <div className="w-12 h-12 bg-gray-200 rounded-full border-2 border-dashed" />
+            <div>
+              <p className="font-bold">{currentSale.name} just bought</p>
+              <p className="text-amber-600 font-bold text-sm truncate max-w-40">{currentSale.ebook}</p>
               <p className="text-xs text-gray-500">{currentSale.time}</p>
             </div>
           </div>

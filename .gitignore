@@ -7,3 +7,4 @@ vite.config.ts.*
 .env
 .local/
 .vercel
+client/public/halisi-logo.png
