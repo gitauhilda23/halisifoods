@@ -161,9 +161,7 @@ export default function Home() {
         {regularPaid.length > 0 && (
           <section className="py-16 bg-gray-50">
             <div className="max-w-7xl mx-auto px-6">
-              <h2 className="text-4xl font-bold text-center mb-12 text-amber-700">
-                Premium Recipe Collections
-              </h2>
+              
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
                 {regularPaid.map(book => <EbookCard key={book.id} book={book} />)}
               </div>
@@ -183,9 +181,7 @@ export default function Home() {
         {bestSellers.length > 0 && (
           <section className="py-16 bg-orange-50">
             <div className="max-w-7xl mx-auto px-6">
-              <h2 className="text-4xl font-bold text-center mb-12 text-orange-800 flex items-center justify-center gap-3">
-                <Flame className="w-10 h-10" /> Hot Best Sellers <Flame className="w-10 h-10" />
-              </h2>
+              
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
                 {bestSellers.map(book => <EbookCard key={book.id} book={book} />)}
               </div>
@@ -196,10 +192,8 @@ export default function Home() {
         {freeEbooks.length > 0 && (
           <section className="py-20 bg-gradient-to-b from-amber-50 to-white">
             <div className="max-w-7xl mx-auto px-6 text-center">
-              <h2 className="text-5xl font-bold mb-4 text-green-700">
-                Free Gifts For You
-              </h2>
-              <p className="text-xl text-gray-600 mb-12">Download instantly – no payment needed!</p>
+              
+             
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
                 {freeEbooks.map(book => <EbookCard key={book.id} book={book} />)}
               </div>
