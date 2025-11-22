@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
 interface HeaderProps {
   cartItemCount?: number;
@@ -17,10 +19,17 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
   const [user, setUser] = useState<any>(null);
   const [cartCount, setCartCount] = useState(cartItemCount);
 
+  // REAL FIREBASE AUTH — NO MORE localStorage FAKE!
   useEffect(() => {
-    const savedUser = JSON.parse(localStorage.getItem("user") || "null");
-    setUser(savedUser);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
 
+    return () => unsubscribe();
+  }, []);
+
+  // Cart count from localStorage (still works the same)
+  useEffect(() => {
     const updateCartCount = () => {
       const cart = JSON.parse(localStorage.getItem("cart") || "[]");
       setCartCount(cart.length);
@@ -30,9 +39,9 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
     return () => window.removeEventListener("cartUpdated", updateCartCount);
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
+  const handleLogout = async () => {
+    await signOut(auth);
+    // Firebase handles cleanup — no need to touch localStorage
     window.location.href = "/";
   };
 
@@ -47,15 +56,12 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
     <header className="sticky top-0 z-50 bg-white shadow-lg border-b-4 border-amber-600">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          {/* FINAL LOGO — BIG, BEAUTIFUL & ROYAL */}
+          {/* LOGO */}
           <Link href="/" className="flex-shrink-0 flex items-center">
             <img
               src="/halisi-logo.png"
               alt="Halisi Foods & Recipes"
-              className="h-20 md:h-24 lg:h-28 w-auto object-contain 
-                         drop-shadow-2xl 
-                         transition-all duration-500 hover:scale-105 
-                         -ml-3 md:-ml-5"
+              className="h-20 md:h-24 lg:h-28 w-auto object-contain drop-shadow-2xl transition-all duration-500 hover:scale-105 -ml-3 md:-ml-5"
             />
           </Link>
 
@@ -77,7 +83,7 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
             ))}
           </nav>
 
-          {/* RIGHT SIDE ACTIONS */}
+          {/* RIGHT SIDE */}
           <div className="flex items-center gap-3">
             <Button
               size="icon"
@@ -88,10 +94,13 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
               <Search className="h-5 w-5" />
             </Button>
 
+            {/* REAL USER DISPLAY */}
             {user ? (
               <div className="hidden sm:flex items-center gap-3 bg-amber-50 rounded-full px-5 py-2 border-2 border-amber-600">
                 <User className="h-5 w-5 text-amber-800" />
-                <span className="font-bold text-amber-900">{user.name}</span>
+                <span className="font-bold text-amber-900">
+                  Habari, {user.displayName || user.email?.split("@")[0]}!
+                </span>
                 <Button size="sm" variant="ghost" onClick={handleLogout} className="text-red-600 hover:bg-red-50">
                   <LogOut className="h-4 w-4" />
                 </Button>
@@ -104,6 +113,7 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
               </Link>
             )}
 
+            {/* CART */}
             <Link href="/cart">
               <Button size="icon" variant="ghost" className="relative text-amber-900 hover:text-amber-700">
                 <ShoppingCart className="h-6 w-6" />
@@ -115,6 +125,7 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
               </Button>
             </Link>
 
+            {/* MOBILE MENU */}
             <Button
               size="icon"
               variant="ghost"
@@ -126,7 +137,7 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
           </div>
         </div>
 
-        {/* SEARCH BAR */}
+        {/* SEARCH & MOBILE MENU — unchanged */}
         {searchOpen && (
           <div className="pb-6 pt-3 border-t-2 border-amber-200">
             <Input
@@ -137,7 +148,6 @@ export default function Header({ cartItemCount = 0 }: HeaderProps) {
           </div>
         )}
 
-        {/* MOBILE MENU */}
         {mobileMenuOpen && (
           <nav className="lg:hidden py-6 border-t-4 border-amber-600 bg-amber-50/80">
             <div className="flex flex-col gap-1">
