@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>My Foods & Recipes - Authentic Kenyan Recipe eBooks</title>
+    <meta name="description" content="Discover authentic Kenyan recipe eBooks featuring Kenyan Recipes  like ugali, nyama choma, and sukuma wiki. Instant digital downloads with detailed ingredients and cooking instructions." />
+    <meta property="og:title" content="My Foods & Recipes - Authentic Kenyan Recipe eBooks" />
+    <meta property="og:description" content="Discover authentic Kenyan recipe eBooks with instant digital downloads. Kenyan Recipes , modern cuisine, and everything in between." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- PAYSTACK LIVE SCRIPT -->
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- SINGLE PURCHASE — LIVE MODE — NO BACKEND -->
+    <script>
+      window.payWithPaystack = function({ email, phone, amount, recipeId, recipeName, metadata = {}, onSuccess, onClose }) {
+        const handler = PaystackPop.setup({
+          key: 'pk_live_b1bc14d3250387de5175b9ebb291d9101904c741',
+          email: email,
+          amount: amount * 100,
+          currency: 'KES',
+          ref: 'MFR_' + Date.now() + '_' + Math.floor(Math.random() * 1000000000),
+          metadata: {
+            recipeId,
+            recipeName,
+            phone,
+            ...metadata
+          },
+          callback: function(response) {
+            // LIVE MODE — SKIP BACKEND — USE LOCAL PDF
+            const finalUrl = metadata.pdfUrl || '#';
+            if (finalUrl && finalUrl !== '#') {
+              onSuccess(finalUrl);
+            } else {
+              alert('PDF not found. Contact support.');
+              onSuccess('#');
+            }
+          },
+          onClose: () => {
+            console.log("Payment closed");
+            onClose?.();
+          }
+        });
+        handler.openIframe();
+      };
+    </script>
+
+    <!-- CART PURCHASE — LIVE MODE — NO BACKEND -->
+    <script>
+      window.payWithPaystackCart = function({ email, phone, items, onSuccess, onClose }) {
+        const baseTotal = items.reduce((sum, i) => sum + i.amount, 0);
+        const discount = items.length >= 3 ? 400 : items.length >= 2 ? 100 : 0;
+        const finalAmount = Math.max(baseTotal - discount, 0);
+
+        const handler = PaystackPop.setup({
+          key: 'pk_live_b1bc14d3250387de5175b9ebb291d9101904c741',
+          email: email,
+          amount: finalAmount * 100,
+          currency: 'KES',
+          ref: 'MFR_CART_' + Date.now() + '_' + Math.floor(Math.random() * 1000000000),
+          metadata: {
+            phone,
+            cart_size: items.length,
+            discount: discount,
+            items: items.map(i => ({
+              id: i.recipeId,
+              name: i.recipeName,
+              price: i.amount
+            }))
+          },
+          callback: function(response) {
+            // LIVE MODE — SKIP BACKEND — RETURN EMPTY URLS
+            onSuccess([], finalAmount, discount);
+          },
+          onClose: () => {
+            console.log("Cart payment closed");
+            onClose?.();
+          }
+        });
+        handler.openIframe();
+      };
+    </script>
+  </body>
+</html>
